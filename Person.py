@@ -9,12 +9,13 @@ FACT_CHECK_PROBABILITY = 0.01
 #Describes an individual in the social network.
 #We keep track of their attitude towards the meme ("believer", "disbeliever", "unaware") and how many times they have seen the meme.
 class Person:
+    __slots__ = ['id', 'attitude', 'times_seen_meme', 'times_seen_factcheck']
     def __init__(self, unique_id: int) -> None:
         self.id: int = unique_id
         self.attitude: str = "unaware"  # Can be "believer", "disbeliever", or "unaware"
         self.times_seen_meme: int = 0
         self.times_seen_factcheck: int = 0
-
+    
     def see(self, see_what: str) -> str | None:
         """
         Simulates the person seeing a meme or a fact-check.

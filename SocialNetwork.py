@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import random
 from numpy.random import choice
 import math
+import pickle
 
 from Person import Person
 
@@ -33,6 +34,8 @@ class SocialNetwork:
         :param num_initial_believers: The number of initial believers.
         """
         if num_initial_believers > len(self.people):
+            print(num_initial_believers)
+            print(len(self.people))
             raise ValueError("Number of initial believers exceeds the number of people in the network.")
         
         initial_believers = random.sample(self.people, num_initial_believers)
@@ -41,13 +44,13 @@ class SocialNetwork:
             for follower in self.graph.successors(person):
                 self.spreading_event_queue.append((follower, "believer"))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
-
     #---Model Evolution--------------------------------------------------
     def evolve_state(self) -> None:
         """
         Evolve the state of each person in the network by spreading the meme.
         """
         num_spreading_events = len(self.spreading_event_queue)
+        print("spreading:"+str(num_spreading_events))
         for _ in range(num_spreading_events):
             person, attitude = self.spreading_event_queue.pop(0)
             retweet = person.see(attitude)
@@ -89,6 +92,22 @@ class SocialNetwork:
         Returns the maximum fraction of people who have believed in the meme at any time.
         """
         return self.max_fraction_believers
+    
+    def save_graph(self,ts,per_bel,n_people,which_twitter,n_seed,timesteps):
+        """
+        Saves graph of fraction of belivers
+        """
+        plt.figure(figsize=(10, 6))
+        plt.plot(ts, per_bel, marker='o', linestyle='-', color='blue')
+
+        plt.xlabel('Time Step')
+        plt.ylabel('Believer Fraction')
+        plt.title(f'Twitter {which_twitter} with {n_people} people and {timesteps} Iterations with {n_seed/n_people:.2f}% Starting Misinformation')
+
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(f"twitter{which_twitter}with{n_people}peeps{n_seed}seed")
+
 
 
     #---Private Methods---------------------------------------------------
@@ -123,4 +142,38 @@ class SocialNetwork:
                 if person != other_person and random.random() < follow_prob:
                     network.add_follower(person, other_person)
 
+        return network
+    
+    @staticmethod
+    def upload_network(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
+        """
+        creates social network from igraph
+        :param ig_net_path: path to igraph file stored as pickel
+        :param n_samples: size of the sub graph to take from igraph use entire graph if 0
+        """
+        with open(ig_net_path, "rb") as f:
+            i_graph = pickle.load(f)  
+
+        if n_samples!=0:
+            node_ids = random.sample(range(i_graph.vcount()), n_samples)
+            i_graph = i_graph.subgraph(node_ids)
+
+        network = SocialNetwork()
+        
+        print("Uploading graph with node count: " + str(i_graph.vcount()))
+
+        for node_id in range(i_graph.vcount()):
+            person = Person(node_id)
+            network.add_person(person)
+
+        for edge in i_graph.es:
+            user = edge.target
+            follower = edge.source
+            
+            network.add_follower(
+                    network.people[user],
+                    network.people[follower]  
+            )
+        
+        
         return network
