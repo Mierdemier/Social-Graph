@@ -98,23 +98,21 @@ class SocialNetwork:
         Returns the maximum fraction of people who have believed in the meme at any time.
         """
         return self.max_fraction_believers
-    
-    def save_graph(self,ts,per_bel,n_people,which_twitter,n_seed,timesteps):
+
+    def save_fractions_believer_plot(self, timestamps : List[int], believer_fractions: List[float], path: str, title: str):
         """
-        Saves graph of fraction of belivers
+        Saves graph of fraction of believers
         """
         plt.figure(figsize=(10, 6))
-        plt.plot(ts, per_bel, marker='o', linestyle='-', color='blue')
+        plt.plot(timestamps, believer_fractions, marker='o', linestyle='-', color='blue')
 
         plt.xlabel('Time Step')
         plt.ylabel('Believer Fraction')
-        plt.title(f'Twitter {which_twitter} with {n_people} people and {timesteps} Iterations with {n_seed/n_people:.2f}% Starting Misinformation')
+        plt.title(title)
 
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(f"twitter{which_twitter}with{n_people}peeps{n_seed}seed")
-
-
+        plt.savefig(path)
 
     #---Private Methods---------------------------------------------------
     def _get_colours(self) -> List[str]:
