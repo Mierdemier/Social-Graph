@@ -8,6 +8,7 @@ import math
 import pickle
 
 from Person import Person
+from Bianconi import BianconiBarabasiModel
 
 class SocialNetwork:
     #---Model Creation----------------------------------------------------
@@ -151,6 +152,24 @@ class SocialNetwork:
         return network
     
     @staticmethod
+    def from_bianconi(bianconi_model: BianconiBarabasiModel) -> 'SocialNetwork':
+        """
+        Creates a social network from a Bianconi-Barabasi model.
+        :param bianconi_model: The Bianconi-Barabasi model instance.
+        """
+        network = SocialNetwork()
+        
+        for node in bianconi_model.get_graph().nodes():
+            person = Person(node)
+            network.add_person(person)
+
+        for edge in bianconi_model.get_graph().edges():
+            user, follower = edge
+            network.add_follower(network.people[follower], network.people[user])
+
+        return network
+    
+    @staticmethod
     def import_from_igraph(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
         """
         creates social network from igraph
@@ -180,5 +199,4 @@ class SocialNetwork:
                     network.people[follower],
                     network.people[user]
             )
-        
         return network

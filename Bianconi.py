@@ -93,6 +93,7 @@ class BianconiBarabasiModel:
         plt.colorbar(nodes, label="Fitness (η)")
         plt.title("Network Visualization")
         plt.show()
+    
 
 # if __name__ == "__main__":
 #     model = BianconiBarabasiModel(N=50, m=2)
