@@ -44,6 +44,9 @@ class SocialNetwork:
             for follower in self.graph.successors(person):
                 self.spreading_event_queue.append((follower, "believer"))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
+
+
+
     #---Model Evolution--------------------------------------------------
     def evolve_state(self) -> None:
         """
@@ -59,6 +62,8 @@ class SocialNetwork:
                     self.spreading_event_queue.append((follower, retweet))
 
         self.max_fraction_believers = max(self.max_fraction_believers, self.get_fraction_believers())
+
+
 
     #---Model Results---------------------------------------------------
     def visualise(self, save_path: str = None, with_labels: bool = False) -> None:
@@ -124,6 +129,7 @@ class SocialNetwork:
         """
         self.pos = nx.spring_layout(self.graph)
 
+
     #---Static Methods---------------------------------------------------
     @staticmethod
     def create_random(num_people: int, follow_prob: float) -> 'SocialNetwork':
@@ -145,7 +151,7 @@ class SocialNetwork:
         return network
     
     @staticmethod
-    def upload_network(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
+    def import_from_igraph(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
         """
         creates social network from igraph
         :param ig_net_path: path to igraph file stored as pickel
@@ -154,7 +160,7 @@ class SocialNetwork:
         with open(ig_net_path, "rb") as f:
             i_graph = pickle.load(f)  
 
-        if n_samples!=0:
+        if n_samples != 0:
             node_ids = random.sample(range(i_graph.vcount()), n_samples)
             i_graph = i_graph.subgraph(node_ids)
 
@@ -171,9 +177,8 @@ class SocialNetwork:
             follower = edge.source
             
             network.add_follower(
-                    network.people[user],
-                    network.people[follower]  
+                    network.people[follower],
+                    network.people[user]
             )
-        
         
         return network

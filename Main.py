@@ -14,32 +14,33 @@ def main():
     #image_filenames = []
     
     ##params
-    n_people = 81306 #small full: 81306 large full: 41652219
-    n_seed = 1000
-    timesteps =100
+    num_people = 81306 #small full: 81306 large full: 41652219
+    num_with_initial_meme = 1000
+    timesteps = 100
+    timesteps_per_checkpoint = 1
     
 
     ##Create network from data 
     
-    sn = SocialNetwork.upload_network(f"twitter_small_cir.pkl", n_samples=n_people)
+    sn = SocialNetwork.import_from_igraph(f"twitter_small_cir.pkl", n_samples=num_people)
     
     ##Generate network 
     #sn = SocialNetwork.create_random(n_people,0.1)
-    sn.seed_meme(n_seed)
+    sn.seed_meme(num_with_initial_meme)
 
     # Loop through time steps to generate frames
-    check_points=[]
+    checkpoints = []
     for time_step in range(timesteps):
         #frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
         #sn.visualise(save_path=frame_filename) 
         #image_filenames.append(frame_filename)
         sn.evolve_state()
-        if time_step%1==0:
-            check_points.append((time_step,sn.get_fraction_believers()))
+        if time_step % timesteps_per_checkpoint == 0:
+            checkpoints.append( (time_step, sn.get_fraction_believers()) )
 
-    ts, per_bel = zip(*check_points)
+    timestamps, fractions_believers = zip(*checkpoints)
 
-    sn.save_graph(ts,per_bel,n_people,"small",n_seed,timesteps)
+    sn.save_graph(timestamps, fractions_believers, num_people, "small", num_with_initial_meme, timesteps)
 
     print(f"At most {sn.get_max_fraction_believers():.2%} of the network have believed in the meme.")
     print(f"Currently, {sn.get_fraction_believers():.2%} of the network believe in the meme.")
