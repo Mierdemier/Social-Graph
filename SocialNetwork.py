@@ -8,6 +8,7 @@ import math
 import pickle
 
 from Person import Person
+from Bianconi import BianconiBarabasiModel
 
 class SocialNetwork:
     #---Model Creation----------------------------------------------------
@@ -44,6 +45,9 @@ class SocialNetwork:
             for follower in self.graph.successors(person):
                 self.spreading_event_queue.append((follower, "believer"))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
+
+
+
     #---Model Evolution--------------------------------------------------
     def evolve_state(self) -> None:
         """
@@ -59,6 +63,8 @@ class SocialNetwork:
                     self.spreading_event_queue.append((follower, retweet))
 
         self.max_fraction_believers = max(self.max_fraction_believers, self.get_fraction_believers())
+
+
 
     #---Model Results---------------------------------------------------
     def visualise(self, save_path: str = None, with_labels: bool = False) -> None:
@@ -92,21 +98,21 @@ class SocialNetwork:
         Returns the maximum fraction of people who have believed in the meme at any time.
         """
         return self.max_fraction_believers
-    
-    def save_graph(self,ts,per_bel,n_people,which_twitter,n_seed,timesteps):
+
+    def save_fractions_believer_plot(self, timestamps : List[int], believer_fractions: List[float], path: str, title: str):
         """
-        Saves graph of fraction of belivers
+        Saves graph of fraction of believers
         """
         plt.figure(figsize=(10, 6))
-        plt.plot(ts, per_bel, marker='o', linestyle='-', color='blue')
+        plt.plot(timestamps, believer_fractions, marker='o', linestyle='-', color='blue')
 
         plt.xlabel('Time Step')
         plt.ylabel('Believer Fraction')
-        plt.title(f'Twitter {which_twitter} with {n_people} people and {timesteps} Iterations with {n_seed/n_people:.2f}% Starting Misinformation')
+        plt.title(title)
 
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(f"twitter{which_twitter}with{n_people}peeps{n_seed}seed")
+        plt.savefig(path)
 
     def make_sparse(self,frac_to_rmv: float):
         edges = list(self.graph.edges())
@@ -126,6 +132,7 @@ class SocialNetwork:
         Used so the layout doesn't change every time we visualise the graph.
         """
         self.pos = nx.spring_layout(self.graph)
+
 
     #---Static Methods---------------------------------------------------
     @staticmethod
@@ -148,7 +155,25 @@ class SocialNetwork:
         return network
     
     @staticmethod
-    def upload_network(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
+    def from_bianconi(bianconi_model: BianconiBarabasiModel) -> 'SocialNetwork':
+        """
+        Creates a social network from a Bianconi-Barabasi model.
+        :param bianconi_model: The Bianconi-Barabasi model instance.
+        """
+        network = SocialNetwork()
+        
+        for node in bianconi_model.get_graph().nodes():
+            person = Person(node)
+            network.add_person(person)
+
+        for edge in bianconi_model.get_graph().edges():
+            user, follower = edge
+            network.add_follower(network.people[follower], network.people[user])
+
+        return network
+    
+    @staticmethod
+    def import_from_igraph(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
         """
         creates social network from igraph
         :param ig_net_path: path to igraph file stored as pickel
@@ -157,7 +182,7 @@ class SocialNetwork:
         with open(ig_net_path, "rb") as f:
             i_graph = pickle.load(f)  
 
-        if n_samples!=0:
+        if n_samples != 0:
             node_ids = random.sample(range(i_graph.vcount()), n_samples)
             i_graph = i_graph.subgraph(node_ids)
 
@@ -174,9 +199,7 @@ class SocialNetwork:
             follower = edge.source
             
             network.add_follower(
-                    network.people[user],
-                    network.people[follower]  
+                    network.people[follower],
+                    network.people[user]
             )
-        
-        
         return network

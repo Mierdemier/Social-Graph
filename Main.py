@@ -4,6 +4,8 @@ import pickle
 import matplotlib.pyplot as plt
 import betaconfig
 from SocialNetwork import SocialNetwork
+from Bianconi import BianconiBarabasiModel
+import config
 
 def main():
     """
@@ -11,60 +13,65 @@ def main():
     """
     frames_dir = "evolution_frames"
     os.makedirs(frames_dir, exist_ok=True) 
-    #image_filenames = []
-    
-    ##params
-    n_people = 81306 #small full: 81306 large full: 41652219
-    n_seed = 1000
-    timesteps =30
+    image_filenames = []
     
 
     ##Create network from data 
-    
-    sn = SocialNetwork.upload_network(f"twitter_small_cir.pkl", n_samples=n_people)
-    
-    ##Generate network 
-    #sn = SocialNetwork.create_random(n_people,0.1)
+    sn = None
+    if config.model_type == "random":
+        sn = SocialNetwork.create_random(config.num_people, 10 / config.num_people) #avg 10 followers per person
+    elif config.model_type == "bianconi":
+        bianconi_model = BianconiBarabasiModel(config.num_people, 10)
+        bianconi_model.run()
+        sn = SocialNetwork.from_bianconi(bianconi_model)
+    elif config.model_type == "real":
+        sn = SocialNetwork.import_from_igraph(config.input_data_path, n_samples=config.num_people)
+    else:
+        raise ValueError(f"Unknown model type: {config.model_type}")
 
-    sn.seed_meme(n_seed)
+    ##Generate network
+    sn.seed_meme(config.num_with_initial_meme)
 
-    
-    check_points=[]
-    for time_step in range(timesteps):
+    # Loop through time steps to generate frames
+    checkpoints = []
+    for time_step in range(config.timesteps):
         #frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
         #sn.visualise(save_path=frame_filename) 
         #image_filenames.append(frame_filename)
         sn.evolve_state()
-        if time_step%1==0:
-            check_points.append((time_step,sn.get_fraction_believers()))
+        if time_step % config.timesteps_per_checkpoint == 0:
+            checkpoints.append( (time_step, sn.get_fraction_believers()) )
 
-        ts, per_bel = zip(*check_points)
-    
-    sn.save_graph(ts,per_bel,n_people,"small",n_seed,timesteps)
+    timestamps, fractions_believers = zip(*checkpoints)
+
+    sn.save_fractions_believer_plot(timestamps, fractions_believers, config.save_plot_path, f"Fraction of Believers Over Time ({config.model_type})")
 
     print(f"At most {sn.get_max_fraction_believers():.2%} of the network have believed in the meme.")
     print(f"Currently, {sn.get_fraction_believers():.2%} of the network believe in the meme.")
 
     # # Create GIF from the collected frames
-    # gif_path = "network_evolution.gif"
-    # images_data = []
-    # for filename in image_filenames:
-    #     images_data.append(imageio.imread(filename))
-    # imageio.mimsave(gif_path, images_data, fps=2, loop=0) 
-    # print(f"GIF saved to {gif_path}")
+    if not config.visualise_network:
+        print("Network visualisation is disabled. Skipping GIF creation.")
+        return
+
+    images_data = []
+    for filename in image_filenames:
+        images_data.append(imageio.imread(filename))
+    imageio.mimsave(config.save_network_visualisation_path, images_data, fps=2, loop=0)
+    print(f"GIF saved to {config.save_network_visualisation_path}")
 
     # #Clean up by removing individual frame images and the directory
-    # for filename in image_filenames:
-    #     try:
-    #         os.remove(filename)
-    #     except OSError as e:
-    #         print(f"Error removing file {filename}: {e}")
-    # try:
-    #     os.rmdir(frames_dir)
-    #     print(f"Removed temporary directory: {frames_dir}")
-    # except OSError as e:
-    #     # Directory might not be empty if a file removal failed
-    #     print(f"Error removing directory {frames_dir}: {e}")
+    for filename in image_filenames:
+        try:
+            os.remove(filename)
+        except OSError as e:
+            print(f"Error removing file {filename}: {e}")
+    try:
+        os.rmdir(frames_dir)
+        print(f"Removed temporary directory: {frames_dir}")
+    except OSError as e:
+        # Directory might not be empty if a file removal failed
+        print(f"Error removing directory {frames_dir}: {e}")
 
 if __name__ == "__main__":
     main()
