@@ -108,7 +108,10 @@ class SocialNetwork:
         plt.tight_layout()
         plt.savefig(f"twitter{which_twitter}with{n_people}peeps{n_seed}seed")
 
-
+    def make_sparse(self,frac_to_rmv: float):
+        edges = list(self.graph.edges())
+        random.shuffle(edges)
+        self.graph.remove_edges_from(edges[:int(0.3 * len(edges))])
 
     #---Private Methods---------------------------------------------------
     def _get_colours(self) -> List[str]:

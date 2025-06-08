@@ -2,7 +2,7 @@ import os
 import imageio
 import pickle
 import matplotlib.pyplot as plt
-
+import betaconfig
 from SocialNetwork import SocialNetwork
 
 def main():
@@ -16,7 +16,7 @@ def main():
     ##params
     n_people = 81306 #small full: 81306 large full: 41652219
     n_seed = 1000
-    timesteps =100
+    timesteps =30
     
 
     ##Create network from data 
@@ -25,9 +25,10 @@ def main():
     
     ##Generate network 
     #sn = SocialNetwork.create_random(n_people,0.1)
+
     sn.seed_meme(n_seed)
 
-    # Loop through time steps to generate frames
+    
     check_points=[]
     for time_step in range(timesteps):
         #frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
@@ -37,8 +38,8 @@ def main():
         if time_step%1==0:
             check_points.append((time_step,sn.get_fraction_believers()))
 
-    ts, per_bel = zip(*check_points)
-
+        ts, per_bel = zip(*check_points)
+    
     sn.save_graph(ts,per_bel,n_people,"small",n_seed,timesteps)
 
     print(f"At most {sn.get_max_fraction_believers():.2%} of the network have believed in the meme.")
