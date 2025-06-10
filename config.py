@@ -12,3 +12,10 @@ input_data_path : str = "twitter_small_cir.pkl" #path to the input data, only us
 save_plot_path : str = "twitter_small_cir_plot.png" #path to save the graph data.
 save_network_visualisation_path : str = "network_evolution.gif" #path to save the network visualisation.
 visualise_network : bool = False #whether to visualise the network evolution or not
+
+
+# bete config
+ALPHA = 0.3 # Empirically, this is usually somewhere between 0.1 and 0.5.
+GAMMA = 0.23 
+OMEGA = 1
+

@@ -1,4 +1,4 @@
-import betaconfig
+import config
 
 def beta_function(x: int) -> float:
     """
@@ -6,4 +6,4 @@ def beta_function(x: int) -> float:
     :param x: The number of times the potential believer has seen the meme.
     :return: The probability of accepting the meme.
     """
-    return betaconfig.ALPHA * x * (1 - betaconfig.GAMMA) ** (x ** betaconfig.OMEGA)
+    return config.ALPHA * x * (1 - config.GAMMA) ** (x ** config.OMEGA)
