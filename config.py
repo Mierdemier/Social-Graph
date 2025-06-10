@@ -14,7 +14,7 @@ save_network_visualisation_path : str = "network_evolution.gif" #path to save th
 visualise_network : bool = False #whether to visualise the network evolution or not
 
 
-# bete config
+# beta config
 ALPHA = 0.3 # Empirically, this is usually somewhere between 0.1 and 0.5.
 GAMMA = 0.23 
 OMEGA = 1

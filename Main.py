@@ -2,7 +2,6 @@ import os
 import imageio
 import pickle
 import matplotlib.pyplot as plt
-import betaconfig
 from SocialNetwork import SocialNetwork
 from Bianconi import BianconiBarabasiModel
 import config
@@ -15,7 +14,6 @@ def main():
     os.makedirs(frames_dir, exist_ok=True) 
     image_filenames = []
     
-
     ##Create network from data 
     sn = None
     if config.model_type == "random":

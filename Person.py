@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 from BetaFunction import beta_function
 
@@ -16,7 +17,7 @@ class Person:
         self.times_seen_meme: int = 0
         self.times_seen_factcheck: int = 0
     
-    def see(self, see_what: str) -> str | None:
+    def see(self, see_what: str) -> Optional[str]:
         """
         Simulates the person seeing a meme or a fact-check.
         :param see_what: The type of content seen ("believer" or "disbeliever").
