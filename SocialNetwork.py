@@ -30,9 +30,9 @@ class SocialNetwork:
         self.graph.add_edge(person_to_follow, follower)
         self.pos = None
 
-    def seed_meme(self, num_initial_believers: int) -> None:
+    def seed_meme(self, num_initial_believers: int, seed_nodes: List[Person] = None) -> None:
         """
-        Seeds the meme in the network by setting a number of people to "believer".
+        Seeds the meme in the network by randomly selecting or using seed nodes as initial believers.
         :param num_initial_believers: The number of initial believers.
         """
         if num_initial_believers > len(self.people):
@@ -40,13 +40,18 @@ class SocialNetwork:
             print(len(self.people))
             raise ValueError("Number of initial believers exceeds the number of people in the network.")
         
-        initial_believers = random.sample(self.people, num_initial_believers)
+        if seed_nodes is not None:
+            if num_initial_believers > len(seed_nodes):
+                raise ValueError("Number of initial believers exceeds the number of seed nodes.")
+            initial_believers = seed_nodes
+        else:
+            initial_believers = random.sample(self.people, num_initial_believers)
+        
         for person in initial_believers:
             person.attitude = "believer"
             for follower in self.graph.successors(person):
                 self.spreading_event_queue.append((follower, "believer"))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
-
 
 
     #---Model Evolution--------------------------------------------------
