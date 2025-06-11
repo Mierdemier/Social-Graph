@@ -28,7 +28,13 @@ def main():
         raise ValueError(f"Unknown model type: {config.model_type}")
 
     ##Generate network
+    # Using random initial believers
     sn.seed_meme(config.num_with_initial_meme)
+    # Using hubs as initial believers
+    hubs = sn.identify_hub_nodes(config.hub_threshold)
+    print(f"Number of hubs: {len(hubs)}")
+    hubs_seeds = [hub[0] for hub in hubs]
+    sn.seed_meme(config.num_with_initial_meme, hubs_seeds)
 
     # Loop through time steps to generate frames
     checkpoints = []
@@ -46,6 +52,14 @@ def main():
 
     print(f"At most {sn.get_max_fraction_believers():.2%} of the network have believed in the meme.")
     print(f"Currently, {sn.get_fraction_believers():.2%} of the network believe in the meme.")
+
+    ## hub node analysis
+    hubs = sn.identify_hub_nodes(config.hub_threshold)
+    print(f"Number of hubs: {len(hubs)}")
+    # for i, (person, score) in enumerate(hubs[:5]):
+    #     print(f"{i+1}. Person ID: {person.id}, Score: {score:.4f}, Attitude: {person.attitude}")
+
+
 
     # # Create GIF from the collected frames
     if not config.visualise_network:
