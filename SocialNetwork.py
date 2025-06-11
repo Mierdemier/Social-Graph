@@ -6,6 +6,7 @@ import random
 from numpy.random import choice
 import math
 import pickle
+import numpy as np
 
 from Person import Person
 from Bianconi import BianconiBarabasiModel
@@ -64,7 +65,56 @@ class SocialNetwork:
 
         self.max_fraction_believers = max(self.max_fraction_believers, self.get_fraction_believers())
 
+    #---Hub Node Analysis--------------------------------------------------
+    def calculate_centrality_metrics(self) -> dict[str, dict]:
+        """
+        Calculate centrality metrics for each person in the network.
+        return: a dictionary of centrality metrics, 
+                each centrality metric is a dictionary of person and centrality score
+        """
+        centrality_metrics = {}
+        
+        centrality_metrics["degree_centrality"] = nx.degree_centrality(self.graph)
+        # centrality_metrics["betweenness_centrality"] = nx.betweenness_centrality(self.graph)   // very slow, time complexity O(n^3)
+        # centrality_metrics["closeness_centrality"] = nx.closeness_centrality(self.graph)
+        
+        return centrality_metrics
 
+    def calculate_composite_centrality_scores(self) -> dict[object, float]:
+        """
+        Calculate composite centrality scores for each person by combining multiple metrics.
+        return: a dictionary of person and composite centrality score
+        """
+        centrality_metrics = self.calculate_centrality_metrics()
+        
+        weights = {
+            "degree_centrality": 1,
+            # "betweenness_centrality": 1,
+            # "closeness_centrality": 1
+        }
+        total_weight = sum(weights.values())
+        
+        person_scores = {}
+        for metric, centrality_dict in centrality_metrics.items():
+            for person, score in centrality_dict.items():
+                if person not in person_scores:
+                    person_scores[person] = 0
+                person_scores[person] += score * weights[metric] / total_weight
+        
+        return person_scores
+    
+    def identify_hub_nodes(self, threshold: float) -> list[tuple[Person, float]]:
+        """
+        Identify hub nodes in the network based on centrality metrics.
+        return: a list of tuples of hub node and centrality score
+        """
+        composite_scores = self.calculate_composite_centrality_scores()
+        sorted_scores = sorted(composite_scores.items(), key=lambda x: x[1], reverse=True)
+        threshold_value = np.percentile([score for _, score in sorted_scores], threshold * 100)
+        hub_nodes = [(person, score) for person, score in sorted_scores if score >= threshold_value]
+
+        return hub_nodes
+    
 
     #---Model Results---------------------------------------------------
     def visualise(self, save_path: str = None, with_labels: bool = False) -> None:

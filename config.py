@@ -4,6 +4,7 @@ model_type : str = "real" # "real" for twitter data, "random" for ER network, 'b
 num_with_initial_meme : int = 1000
 timesteps : int = 100
 timesteps_per_checkpoint : int = 1
+hub_threshold : float = 0.95
 
 #Input configurations.
 input_data_path : str = "twitter_small_cir.pkl" #path to the input data, only used for real model
