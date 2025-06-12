@@ -143,14 +143,11 @@ class SocialNetwork:
         :param follow_prob: The probability of following.
         """
         network = SocialNetwork()
-        for i in range(num_people):
-            person = Person(i) 
-            network.add_person(person)
-
-        for person in network.people:
-            for other_person in network.people:
-                if person != other_person and random.random() < follow_prob:
-                    network.add_follower(person, other_person)
+        people = [Person(i) for i in range(num_people)]
+        network.people = people
+        network.graph = nx.erdos_renyi_graph(num_people, follow_prob, directed=True)
+        mapping = {i: person for i, person in enumerate(people)}
+        network.graph = nx.relabel_nodes(network.graph, mapping)
 
         return network
     
