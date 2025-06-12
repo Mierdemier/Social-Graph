@@ -43,9 +43,11 @@ def main():
     # Loop through time steps to generate frames
     checkpoints = []
     for time_step in range(config.timesteps):
-        #frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
-        #sn.visualise(save_path=frame_filename) 
-        #image_filenames.append(frame_filename)
+        if config.visualise_network:
+            frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
+            sn.visualise(save_path=frame_filename) 
+            image_filenames.append(frame_filename)
+            
         sn.evolve_state()
         if time_step % config.timesteps_per_checkpoint == 0:
             checkpoints.append( (time_step, sn.get_fraction_believers()) )

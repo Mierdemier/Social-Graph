@@ -15,7 +15,7 @@ class SocialNetwork:
     def __init__(self) -> None:
         self.graph = nx.DiGraph()
         self.people: List[Person] = []
-        self.spreading_event_queue: List[Tuple[Person, str]] = []
+        self.spreading_event_queue: List[Tuple[Person, int]] = []
         self.max_fraction_believers = 0.0
         self.pos = None
 
@@ -35,15 +35,13 @@ class SocialNetwork:
         :param num_initial_believers: The number of initial believers.
         """
         if num_initial_believers > len(self.people):
-            print(num_initial_believers)
-            print(len(self.people))
-            raise ValueError("Number of initial believers exceeds the number of people in the network.")
+            raise ValueError(f"Number of initial believers ({num_initial_believers}) exceeds the number of people ({len(self.people)}) in the network.")
         
         initial_believers = random.sample(self.people, num_initial_believers)
         for person in initial_believers:
-            person.attitude = "believer"
+            person.attitude = 1 # BELIEVER
             for follower in self.graph.successors(person):
-                self.spreading_event_queue.append((follower, "believer"))
+                self.spreading_event_queue.append((follower, 1))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
 
 
@@ -54,7 +52,6 @@ class SocialNetwork:
         Evolve the state of each person in the network by spreading the meme.
         """
         num_spreading_events = len(self.spreading_event_queue)
-        print("spreading:"+str(num_spreading_events))
         for _ in range(num_spreading_events):
             person, attitude = self.spreading_event_queue.pop(0)
             retweet = person.see(attitude)
@@ -90,7 +87,7 @@ class SocialNetwork:
         """
         Returns the fraction of people who believe in the meme.
         """
-        num_believers = sum(1 for person in self.people if person.attitude == "believer")
+        num_believers = sum(1 for person in self.people if person.attitude == 1)  # BELIEVER
         return num_believers / len(self.people) if self.people else 0.0
     
     def get_max_fraction_believers(self) -> float:
@@ -184,8 +181,6 @@ class SocialNetwork:
             i_graph = i_graph.subgraph(node_ids)
 
         network = SocialNetwork()
-        
-        print("Uploading graph with node count: " + str(i_graph.vcount()))
 
         for node_id in range(i_graph.vcount()):
             person = Person(node_id)
