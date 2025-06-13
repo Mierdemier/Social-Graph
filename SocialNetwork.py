@@ -10,8 +10,9 @@ import pickle
 
 from Person import Person
 from Bianconi import BianconiBarabasiModel
-import config
 
+
+#This file defines our model of information spreading in a social network.
 class SocialNetwork:
     #---Model Creation----------------------------------------------------
     def __init__(self) -> None:
@@ -27,24 +28,41 @@ class SocialNetwork:
         self.pos = None
 
     def add_follower(self, follower: Person, person_to_follow: Person) -> None:
-        #Each person has an edge to each of their followers
+        #Each person has an edge *to* each of their followers.
+        # (so information spreads in the direction of the edges)
         self.graph.add_edge(person_to_follow, follower)
         self.pos = None
 
-    def seed_meme(self, num_initial_believers: int) -> None:
+    def seed_meme(self, num_initial_believers: int, fraction_disbelievers: float = 0.0, use_hubs: bool = False) -> None:
         """
         Seeds the meme in the network by setting a number of people to "believer".
         :param num_initial_believers: The number of initial believers.
+        :param fraction_disbelievers: optional. Fraction of initial believers who are replaced with disbelievers.
+        :param use_hubs: optional. If True, initial *dis*believers are chosen from hub nodes.
         """
         if num_initial_believers > len(self.people):
             raise ValueError(f"Number of initial believers ({num_initial_believers}) exceeds the number of people ({len(self.people)}) in the network.")
         
-        initial_believers = random.sample(self.people, num_initial_believers)
+        initial_believers = random.sample(self.people, int(num_initial_believers * (1 - fraction_disbelievers)))
         for person in initial_believers:
-            person.attitude = 1 # BELIEVER
+            person.attitude = Person.BELIEVER
             for follower in self.graph.successors(person):
-                self.spreading_event_queue.append((follower, 1))
+                self.spreading_event_queue.append((follower, Person.BELIEVER))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
+
+        if fraction_disbelievers == 0.0:
+            return
+        
+        #Start of optional part: For the experiment where we replace some initial believers with disbelievers:
+        if use_hubs:
+            hubs = self.identify_hub_nodes(threshold=0.95)
+            initial_disbelievers = random.sample([person for person, _ in hubs], int(num_initial_believers * fraction_disbelievers))
+        else:
+            initial_disbelievers = random.sample([person for person in self.people if person not in initial_believers], int(num_initial_believers * fraction_disbelievers))
+        for person in initial_disbelievers:
+            person.attitude = Person.DISBELIEVER
+            for follower in self.graph.successors(person):
+                self.spreading_event_queue.append((follower, Person.DISBELIEVER))
 
 
 
@@ -89,7 +107,7 @@ class SocialNetwork:
         """
         Returns the fraction of people who believe in the meme.
         """
-        num_believers = sum(1 for person in self.people if person.attitude == 1)  # BELIEVER
+        num_believers = sum(1 for person in self.people if person.attitude == Person.BELIEVER)
         return num_believers / len(self.people) if self.people else 0.0
     
     def get_max_fraction_believers(self) -> float:
@@ -129,7 +147,6 @@ class SocialNetwork:
                 person.check_probability = 0.9
 
         print(f"Found {len(hubs)} hubs..")
-
 
 
     def identify_hub_nodes(self, threshold: float) -> List[Tuple[Person, float]]:

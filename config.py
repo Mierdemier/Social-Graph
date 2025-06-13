@@ -1,10 +1,13 @@
 ##Simulation parameters.
 num_people : int = 81306 #small full: 81306 large full: 41652219
 num_edges : int = 1342310 #small full: 1342310
-model_type : str = "bianconi" # "real" for twitter data, "random" for ER network, 'bianconi' for Bianconi-Barabasi model
+model_type : str = "real" # "real" for twitter data, "random" for ER network, 'bianconi' for Bianconi-Barabasi model
 num_with_initial_meme : int = 1000
 timesteps : int = 100 # maximum number of timesteps before the simulation is forcefully stopped.
 timesteps_per_checkpoint : int = 1
+
+#For replicating the experiments:
+experiment_type : str = "baseline" #Can be: "baseline", "sparse", "central_checkers", "nonhub_initial_checkers", "hub_initial_checkers"
 
 #Input configurations.
 input_data_path : str = "twitter_small_cir.pkl" #path to the input data, only used for real model
