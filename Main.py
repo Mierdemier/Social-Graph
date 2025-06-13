@@ -24,20 +24,20 @@ def main():
     if config.model_type == "random":
         sn = SocialNetwork.create_random(config.num_people, (config.num_edges / (config.num_people * (config.num_people - 1))))
     elif config.model_type == "bianconi":
-        bianconi_model = BianconiBarabasiModel(config.num_people, config.num_edges / config.num_people)
+        bianconi_model = BianconiBarabasiModel(config.num_people, int(config.num_edges / config.num_people))
         bianconi_model.run()
         sn = SocialNetwork.from_bianconi(bianconi_model)
     elif config.model_type == "real":
         sn = SocialNetwork.import_from_igraph(config.input_data_path, n_samples=config.num_people)
     else:
         raise ValueError(f"Unknown model type: {config.model_type}")
+    sn.make_hubs_factcheckers(threshold=0.99)
     network_created_time = time.time() - start_time
 
     print(f"Network created in {network_created_time:.2f} seconds.")
     print("Number of edges in the network:", sn.graph.number_of_edges())
     print("Number of nodes in the network:", sn.graph.number_of_nodes())
 
-    ##Generate network
     sn.seed_meme(config.num_with_initial_meme)
 
     # Loop through time steps to generate frames
@@ -47,7 +47,7 @@ def main():
             frame_filename = os.path.join(frames_dir, f"frame_{time_step:03d}.png")
             sn.visualise(save_path=frame_filename) 
             image_filenames.append(frame_filename)
-            
+
         sn.evolve_state()
         if time_step % config.timesteps_per_checkpoint == 0:
             checkpoints.append( (time_step, sn.get_fraction_believers()) )

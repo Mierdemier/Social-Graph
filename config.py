@@ -1,9 +1,9 @@
 ##Simulation parameters.
 num_people : int = 81306 #small full: 81306 large full: 41652219
 num_edges : int = 1342310 #small full: 1342310
-model_type : str = "random" # "real" for twitter data, "random" for ER network, 'bianconi' for Bianconi-Barabasi model
+model_type : str = "bianconi" # "real" for twitter data, "random" for ER network, 'bianconi' for Bianconi-Barabasi model
 num_with_initial_meme : int = 1000
-timesteps : int = 100
+timesteps : int = 100 # maximum number of timesteps before the simulation is forcefully stopped.
 timesteps_per_checkpoint : int = 1
 
 #Input configurations.
@@ -17,8 +17,8 @@ visualise_network : bool = False #whether to visualise the network evolution or 
 
 # beta config
 ALPHA = 0.3 # Empirically, this is usually somewhere between 0.1 and 0.5.
-GAMMA = 0.23 
-OMEGA = 1
+GAMMA = 0.23 # value taken from the paper
+OMEGA = 1 # also taken from the paper.
 
 #Other probabilities.
 FACT_CHECK_PROBABILITY : float = 0.01

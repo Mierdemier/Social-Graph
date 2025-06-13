@@ -13,8 +13,6 @@ class BianconiBarabasiModel:
         self.m = m
         self.graph = nx.Graph()
         self.fitness = {}
-        self.node_birth_time = {}
-        np.random.seed(42)
 
     def _get_fitness(self):
         return np.random.uniform(0.01, 1.0)
@@ -30,25 +28,23 @@ class BianconiBarabasiModel:
         for i in range(self.m):
             self.graph.add_node(i)
             self.fitness[i] = self._get_fitness()
-            self.node_birth_time[i] = 0
         for i in range(self.m):
             for j in range(i + 1, self.m):
                 self.graph.add_edge(i, j)
 
     def grow_network(self):
+        degrees = np.array([self.graph.degree(n) for n in self.graph.nodes()])
+        etas = np.array([self.fitness[n] for n in self.graph.nodes()])
+
         for new_node in range(self.m, self.N):
             # add new node
             eta_new = self._get_fitness()
             self.fitness[new_node] = eta_new
-            self.node_birth_time[new_node] = new_node
             
             # probability of connection
-            degrees = np.array([self.graph.degree(n) for n in self.graph.nodes()])
-            etas = np.array([self.fitness[n] for n in self.graph.nodes()])
             attractiveness = degrees * etas
             total = attractiveness.sum()
             probs = attractiveness / total if total > 0 else np.ones_like(attractiveness) / len(attractiveness)
-            # print(probs)
 
             # add edges
             existing_nodes = list(self.graph.nodes())
@@ -56,6 +52,11 @@ class BianconiBarabasiModel:
             self.graph.add_node(new_node)
             for target in targets:
                 self.graph.add_edge(new_node, target)
+                degrees[target] += 1
+
+            degrees = np.append(degrees, self.m)  # Append new node's degree (m initially)
+            etas = np.append(etas, eta_new)  # Append new node's fitness
+
 
     def run(self):
         self.initialize_network()

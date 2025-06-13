@@ -10,9 +10,10 @@ DISBELIEVER = 2
 #Describes an individual in the social network.
 #We keep track of their attitude towards the meme ("believer", "disbeliever", "unaware") and how many times they have seen the meme.
 class Person:
-    __slots__ = ['id', 'attitude', 'times_seen_meme', 'times_seen_factcheck']
+    __slots__ = ['id', 'attitude', 'times_seen_meme', 'times_seen_factcheck', 'check_probability']
     def __init__(self, unique_id: int) -> None:
         self.id: int = unique_id
+        self.check_probability: float = config.FACT_CHECK_PROBABILITY 
         self.attitude: int = UNAWARE  # Can be "believer", "disbeliever", or "unaware"
         self.times_seen_meme: int = 0
         self.times_seen_factcheck: int = 0
@@ -35,7 +36,7 @@ class Person:
 
         x = self.times_seen_meme if see_what == BELIEVER else self.times_seen_factcheck
         if random.random() < beta_function(x): #Roll a random chance to see if they even care enough to tweet something.
-            if random.random() < config.FACT_CHECK_PROBABILITY:
+            if random.random() < self.check_probability:
                 # Roll another random chance to see if they fact-check.
                 # Note: in case see_what == "disbeliever" this is effectively ignored, as the person becomes disbeliever either way.
                 self.attitude = DISBELIEVER

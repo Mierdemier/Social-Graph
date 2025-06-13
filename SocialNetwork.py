@@ -1,6 +1,7 @@
 from typing import List
 from typing import Tuple
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 import random
 from numpy.random import choice
@@ -9,6 +10,7 @@ import pickle
 
 from Person import Person
 from Bianconi import BianconiBarabasiModel
+import config
 
 class SocialNetwork:
     #---Model Creation----------------------------------------------------
@@ -111,10 +113,35 @@ class SocialNetwork:
         plt.tight_layout()
         plt.savefig(path)
 
-    def make_sparse(self,frac_to_rmv: float):
+
+    #---Experiments / Inteventions---------------------------------------------------
+    def make_sparse(self, frac_to_rmv: float):
         edges = list(self.graph.edges())
         random.shuffle(edges)
-        self.graph.remove_edges_from(edges[:int(0.3 * len(edges))])
+        self.graph.remove_edges_from(edges[:int(frac_to_rmv * len(edges))])
+
+    def make_hubs_factcheckers(self, threshold: float) -> None:
+        hubs = self.identify_hub_nodes(threshold)
+        hubs = {person for person, _ in hubs}
+
+        for person in self.people:
+            if person in hubs:
+                person.check_probability = 0.9
+
+        print(f"Found {len(hubs)} hubs..")
+
+
+
+    def identify_hub_nodes(self, threshold: float) -> List[Tuple[Person, float]]:
+        """
+        Identify hub nodes in the network based on degree centrality.
+        return: a list of tuples of hub node, centrality score
+        """
+        centrality = nx.degree_centrality(self.graph)
+        sorted_centrality = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
+        threshold_value = np.percentile([score for _, score in sorted_centrality], threshold * 100)
+        hub_nodes = [(person, score) for person, score in sorted_centrality if score >= threshold_value]
+        return hub_nodes
 
     #---Private Methods---------------------------------------------------
     def _get_colours(self) -> List[str]:
@@ -162,7 +189,10 @@ class SocialNetwork:
 
         for edge in bianconi_model.get_graph().edges():
             user, follower = edge
-            network.add_follower(network.people[follower], network.people[user])
+            if random.random() < 0.5:
+                network.add_follower(network.people[follower], network.people[user])
+            else:
+                network.add_follower(network.people[user], network.people[follower])
 
         return network
     
@@ -170,8 +200,8 @@ class SocialNetwork:
     def import_from_igraph(ig_net_path: str, n_samples=0) -> 'SocialNetwork':
         """
         creates social network from igraph
-        :param ig_net_path: path to igraph file stored as pickel
-        :param n_samples: size of the sub graph to take from igraph use entire graph if 0
+        :param ig_net_path: path to igraph file stored as pickle
+        :param n_samples: size of the sub graph to take from igraph; use entire graph if 0
         """
         with open(ig_net_path, "rb") as f:
             i_graph = pickle.load(f)  
