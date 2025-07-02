@@ -7,6 +7,7 @@ from numpy.random import choice
 import math
 import pickle
 import numpy as np
+from tqdm import tqdm
 
 from Person import Person
 from Bianconi import BianconiBarabasiModel
@@ -30,29 +31,68 @@ class SocialNetwork:
         self.graph.add_edge(person_to_follow, follower)
         self.pos = None
 
-    def seed_meme(self, num_initial_believers: int, seed_nodes: List[Person] = None) -> None:
-        """
-        Seeds the meme in the network by randomly selecting or using seed nodes as initial believers.
-        :param num_initial_believers: The number of initial believers.
-        """
-        if num_initial_believers > len(self.people):
-            print(num_initial_believers)
-            print(len(self.people))
-            raise ValueError("Number of initial believers exceeds the number of people in the network.")
+    # def seed_meme(self, num_initial_believers: int, seed_nodes: List[Person] = None) -> None:
+    #     """
+    #     Seeds the meme in the network by randomly selecting or using seed nodes as initial believers.
+    #     :param num_initial_believers: The number of initial believers.
+    #     """
+    #     if num_initial_believers > len(self.people):
+    #         print(num_initial_believers)
+    #         print(len(self.people))
+    #         raise ValueError("Number of initial believers exceeds the number of people in the network.")
         
-        if seed_nodes is not None:
-            if num_initial_believers > len(seed_nodes):
-                raise ValueError("Number of initial believers exceeds the number of seed nodes.")
-            initial_believers = seed_nodes
+    #     if seed_nodes is not None:
+    #         if num_initial_believers > len(seed_nodes):
+    #             raise ValueError("Number of initial believers exceeds the number of seed nodes.")
+    #         initial_believers = seed_nodes
+    #     else:
+    #         initial_believers = random.sample(self.people, num_initial_believers)
+        
+    #     for person in initial_believers:
+    #         person.attitude = "believer"
+    #         for follower in self.graph.successors(person):
+    #             self.spreading_event_queue.append((follower, "believer"))
+    #     self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
+    def seed_meme(self, num_initial_believers: int, num_initial_disbelievers: int = 0,
+              believer_seed_nodes: List[Person] = None, disbeliever_seed_nodes: List[Person] = None) -> None:
+        
+        total_initial = num_initial_believers + num_initial_disbelievers
+        if total_initial > len(self.people):
+            print(f"Total initial: {total_initial}")
+            print(f"Network size: {len(self.people)}")
+            raise ValueError("Total initial nodes exceed the number of people in the network.")
+        
+        if believer_seed_nodes is not None:
+            if num_initial_believers > len(believer_seed_nodes):
+                raise ValueError("Number of initial believers exceeds the number of believer seed nodes.")
+            initial_believers = believer_seed_nodes[:num_initial_believers]
         else:
             initial_believers = random.sample(self.people, num_initial_believers)
+        
+        if num_initial_disbelievers > 0:
+            if disbeliever_seed_nodes is not None:
+                if num_initial_disbelievers > len(disbeliever_seed_nodes):
+                    raise ValueError("Number of initial disbelievers exceeds the number of disbeliever seed nodes.")
+                initial_disbelievers = disbeliever_seed_nodes[:num_initial_disbelievers]
+            else:
+                remaining_nodes = [p for p in self.people if p not in initial_believers]
+                if num_initial_disbelievers > len(remaining_nodes):
+                    raise ValueError("Not enough remaining nodes for initial disbelievers.")
+                initial_disbelievers = random.sample(remaining_nodes, num_initial_disbelievers)
+        else:
+            initial_disbelievers = []
         
         for person in initial_believers:
             person.attitude = "believer"
             for follower in self.graph.successors(person):
                 self.spreading_event_queue.append((follower, "believer"))
+        
+        for person in initial_disbelievers:
+            person.attitude = "disbeliever"
+            for follower in self.graph.successors(person):
+                self.spreading_event_queue.append((follower, "disbeliever"))
+        
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
-
 
     #---Model Evolution--------------------------------------------------
     def evolve_state(self) -> None:
@@ -78,8 +118,9 @@ class SocialNetwork:
                 each centrality metric is a dictionary of person and centrality score
         """
         centrality_metrics = {}
-        
+        print("Calculating centrality metrics...")
         centrality_metrics["degree_centrality"] = nx.degree_centrality(self.graph)
+        print("Degree centrality calculated.")
         # centrality_metrics["betweenness_centrality"] = nx.betweenness_centrality(self.graph)   // very slow, time complexity O(n^3)
         # centrality_metrics["closeness_centrality"] = nx.closeness_centrality(self.graph)
         
@@ -116,7 +157,7 @@ class SocialNetwork:
         composite_scores = self.calculate_composite_centrality_scores()
         sorted_scores = sorted(composite_scores.items(), key=lambda x: x[1], reverse=True)
         threshold_value = np.percentile([score for _, score in sorted_scores], threshold * 100)
-        hub_nodes = [(person, score) for person, score in sorted_scores if score >= threshold_value]
+        hub_nodes = [person for person, score in sorted_scores if score >= threshold_value]
 
         return hub_nodes
     
@@ -202,10 +243,11 @@ class SocialNetwork:
             person = Person(i) 
             network.add_person(person)
 
-        for person in network.people:
+        for person in tqdm(network.people):
             for other_person in network.people:
                 if person != other_person and random.random() < follow_prob:
                     network.add_follower(person, other_person)
+        print("Random Network Created")
 
         return network
     
@@ -217,13 +259,17 @@ class SocialNetwork:
         """
         network = SocialNetwork()
         
-        for node in bianconi_model.get_graph().nodes():
+        for node in tqdm(bianconi_model.get_graph().nodes()):
             person = Person(node)
             network.add_person(person)
 
-        for edge in bianconi_model.get_graph().edges():
+        for edge in tqdm(bianconi_model.get_graph().edges()):
             user, follower = edge
+            if random.random() < 0.5:
+                user, follower = follower, user
             network.add_follower(network.people[follower], network.people[user])
+
+        print("Bianconi Network Created")
 
         return network
     
