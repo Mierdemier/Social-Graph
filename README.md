@@ -5,7 +5,7 @@ The basic workflow is as follows:
 - Make sure you have the necessary requirements (see below)
 - Go into config.py to specify a graph, an experiment, and model parameters. You can also ask for a visualisation GIF.
 - Run Main.py to do a single simulation.
-- That's it. Repeat if necessary to obtain multiple independently drawn results.
+- Wait. It is expected that running the simulation takes a while! On our computer, some experiments can take upwards of 10 minutes.
 
 ### Requirements
 You need:

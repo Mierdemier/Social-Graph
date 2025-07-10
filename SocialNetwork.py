@@ -8,7 +8,7 @@ from numpy.random import choice
 import math
 import pickle
 
-from Person import Person
+from Person import Person, BELIEVER, DISBELIEVER, UNAWARE
 from Bianconi import BianconiBarabasiModel
 
 
@@ -45,9 +45,9 @@ class SocialNetwork:
         
         initial_believers = random.sample(self.people, int(num_initial_believers * (1 - fraction_disbelievers)))
         for person in initial_believers:
-            person.attitude = Person.BELIEVER
+            person.attitude = BELIEVER
             for follower in self.graph.successors(person):
-                self.spreading_event_queue.append((follower, Person.BELIEVER))
+                self.spreading_event_queue.append((follower, BELIEVER))
         self.max_fraction_believers = num_initial_believers / len(self.people) if self.people else 0.0
 
         if fraction_disbelievers == 0.0:
@@ -60,9 +60,9 @@ class SocialNetwork:
         else:
             initial_disbelievers = random.sample([person for person in self.people if person not in initial_believers], int(num_initial_believers * fraction_disbelievers))
         for person in initial_disbelievers:
-            person.attitude = Person.DISBELIEVER
+            person.attitude = DISBELIEVER
             for follower in self.graph.successors(person):
-                self.spreading_event_queue.append((follower, Person.DISBELIEVER))
+                self.spreading_event_queue.append((follower, DISBELIEVER))
 
 
 
@@ -107,7 +107,7 @@ class SocialNetwork:
         """
         Returns the fraction of people who believe in the meme.
         """
-        num_believers = sum(1 for person in self.people if person.attitude == Person.BELIEVER)
+        num_believers = sum(1 for person in self.people if person.attitude == BELIEVER)
         return num_believers / len(self.people) if self.people else 0.0
     
     def get_max_fraction_believers(self) -> float:
@@ -132,7 +132,7 @@ class SocialNetwork:
         plt.savefig(path)
 
 
-    #---Experiments / Inteventions---------------------------------------------------
+    #---Experiments / Interventions---------------------------------------------------
     def make_sparse(self, frac_to_rmv: float):
         edges = list(self.graph.edges())
         random.shuffle(edges)
