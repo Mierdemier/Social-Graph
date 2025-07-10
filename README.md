@@ -28,7 +28,34 @@ Here's what each Python file does, so you know which one to modify if you want t
 - Bianconi.py: a helper class for creating an undirected Bianconi network. Convert it into a directed social network by using SocialNetwork.from_bianconi().
 - config.py: contains all the many settings for main.
 
-### Simplified Example
+### Explanation of config.py
+The config contains all the settings to run experiments on different graphs. You should be able to run any experiment of choice without touching any other part of the code. By default, the program will run the baseline experiment on the real network. To change the network, use a different value for ```model_type```.  To make an intervention, use a different value for ```experiment_type```. The other options are advanced configurations that let you use different settings/graphs from the ones used in the report, or or produce fancier visualisations (a graph of believers fraction over time is automatically produced). You do not need to change any of these advanced options to reproduce the experiments from the report. The full explanation of each setting is as follows:
+
+To control the network:
+- model_type: If set to "real", the program reads the (real) network from the input_data_path. If set to "random", it generates a random Erdos-Renyi network. If set to "bianconi", it creates a random Bianconi-Barabasi model.
+- input_data_path: If model type is "real", the graph will be read from here. It should refer to a .pkl file containing a network. Note that you could use this to feed in arbitrary networks besides the real one, so long as you can precreate them and put them in a .pkl file. By default, however, it is set to refer to the real network. If model type is not "real", this setting is ignored.
+- num_people: Controls the number of vertices in a network generated at runtime ("random" or "bianconi"). If model type is "real" this setting is ignored.
+- num_edges: Controls the approximate number of edges in a network generated at runtime ("random" or "bianconi"). If model type is "real" this setting is ignored.
+
+For replicating the experiments:
+- experiment_type: If set to "baseline", no intervention is performed.
+- If set to "sparse", it removes 30% of edges, as described in Section IV.B the report. This happens after the network is generated, so afterwards the number of edges will be smaller than num_edges!
+- If set to "central_checkers", it raises the probability of fact-checking for central nodes, as described in Section IV.C of the report.
+- If set to "nonhub_initial_checkers", it replaces some initial believers with disbelievers without specifically selecting hub nodes, as described in Section IV.D.
+- If set to "hub_initial_checkers", it replaces some initial believers with disbelievers, specifically selecting hub nodes, as described in Section IV.D.
+
+Miscellaneous simulation parameters:
+- ALPHA, BETA, GAMMA: These parameters control the Beta(x) equation given in "Spreading Dynamics of Information on Online Social Networks". Refer to this paper or Section III.B of the report for an explanation of what they represent.
+- FACT_CHECK_PROBABILITY: The probability that a person will fact-check upon noticing the misinformation post. Note that for central fact checkers in the "central_checkers" experiment, this probability is overriden.
+- timesteps: The maximum number of timesteps before we cut the simulation short. This should be a number high enough that it is never reached. It was never reached for any of the experiments we did. If you invent an experiment that makes the simulation take longer than this number of timesteps you can either set it to a higher value (and accept that this means the simulation will take absurdly long on most hardware!) or (we recommend) find a way to make the simulation terminate quicker. For example, you could use a smaller network.
+
+Visualisation parameters:
+- timesteps_per_checkpoint: Controls the resoultion of the final graph. 1 means every timestep is taken into account. n means every nth timestep becomes a point on the graph, and the others are linearly interpolated. In the current version, there is no need to use n > 1. However, if you want to run your own experiment that records lots of information (e.g. the attitude of every individual), you could use more infrequent checkpoints to avoid running out of RAM. Note that this setting does not affect the dynamics of the simulation itself, only the rate at which the fraction of believers is recorded.
+- save_plot_path: Should be a file path ending in ".png". This is the location where the graph of the fraction of believers over time will be saved.
+- visualise_network: Iff True, create a GIF visually showing the entire network and how it developed over time. Green circles are believers, red circles are disbelievers, grey circles are unaware people. Arrows indicate edges. Do not turn this on for a full-sized network: it will take hours to create the GIF, and it will not be legible due to the number of circles. Instead, we recommend creating a visualisation of a small example graph by setting model_type = "bianconi" and using num_people and num_edges to control the size, or setting model_type = "real" and input_data_path to a file containing a small network.
+- save_network_visualisation_path: Should be a file path ending in ".gif". If visualise_network, the final visualisation will be stored here. Otherwise, this setting is ignored.
+
+### Simplified example for Main.py
 The main function deals with a lot of weird experiments and edge cases that you will not need 99% of the time. It also produces many different outputs, depending on what the config asks for. This clutters it somewhat. Here's a simplified version of main that lets you see the simple underlying logic:
 
 ```
